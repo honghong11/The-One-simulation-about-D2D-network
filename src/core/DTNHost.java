@@ -6,7 +6,11 @@ package core;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import com.sun.xml.internal.bind.v2.model.core.ID;
 
 import movement.MovementModel;
 import movement.Path;
@@ -40,17 +44,57 @@ public class DTNHost implements Comparable<DTNHost> {
 	
 	/**
 	 * @author ht
-	 * 节点类型初始化所需要的变量
+	 * 节点类型初始化，为节点定义角色
+	 * GO节点可同时使用两个接口
+	 * GW节点同时使用两个接口（GW节点默认使用P2P接口连接GO，如果连接第二个GO，则是使用WLAN接口，第二个GO为LCGO）
+	 * GM节点只能使用一个接口
 	 */
 	private boolean isGO = false;
 	private boolean isGW = false;
+	private boolean isGM = false;
 	public boolean getIsGO() {
 		return isGO;
 	}
 	public boolean getIsGW() {
 		return isGW;
 	}
+	public boolean getIsGM() {
+		return isGM;
+	}
+	public String getNodeType() {
+		if(getIsGM()) {
+			return "GM";
+		}else if(getIsGO()){
+			return "GO";
+		}else if(getIsGW()) {
+			return "GW";
+		}
+		return "wu";
+	}
+	private List<Integer> resourceId = new ArrayList<>();
+	public List<Integer> getResourceId(){
+		return resourceId;
+	} 
+/**
+ * RN 组内的资源列表，由GO节点维持
+ */
+	private Map<Integer,Integer> RN  = new HashMap<>();
+	public Map<Integer, Integer> getRN(){
+		return RN;
+	}
 	
+	/**
+	 * 设备入组，GO将组员设备拥有的资源信息添加到RN表中
+	 * @param numOfNode
+	 * @param resourceIds
+	 * @return
+	 */
+	public Map<Integer, Integer> addRN(int numOfNode,List<Integer> resourceIds){
+		for(int id: resourceIds) {
+			RN.put(numOfNode, id);
+		}
+		return RN;
+	}
 
 	static {
 		DTNSim.registerForReset(DTNHost.class.getCanonicalName());
@@ -474,11 +518,9 @@ public class DTNHost implements Comparable<DTNHost> {
 	 */
 	public int receiveMessage(Message m, DTNHost from) {
 		int retVal = this.router.receiveMessage(m, from);
-
 		if (retVal == MessageRouter.RCV_OK) {
 			m.addNodeOnPath(this);	// add this node on the messages path
 		}
-
 		return retVal;
 	}
 
@@ -557,19 +599,37 @@ public class DTNHost implements Comparable<DTNHost> {
 	 */
 	
 	/**
-	 * DTN 节点的初始化方法，主要对节点类型进行划分
-	 * 有(0-0.125)的几率成为组主节点，(0.625-0.875)的几率成为网关节点
+	 * DTN 节点初始化时调用该方法，主要当前DTN节点的类型进行随机划分
+	 * 有(0-0.25)的几率成为组主节点，(0.75-1.0)的几率成为网关节点
 	 */
 	public void init(double ranValue) {
 		if (ranValue>0&&ranValue<0.25) {
 			isGO = true;
+			initResourceIds();
 			//初始化GO节点中的表
 		}else if (ranValue>0.75&&ranValue<1.0) {
 			isGW = true;
+			initResourceIds();
 			//初始化GW 节点中的表
+		}else {
+			isGM = true;
+			initResourceIds();
 		}
-		
 	}
+	
+	/**
+	 * 为每个节点初始化资源名称（资源标号：1-100，每隔20是一种资源分类）
+	 * 这个资源信息要作为node的一个成员变量，以便连接后可以从连接中获取该资源信息
+	 * @return 生成的资源名称列表信息
+	 */
+	public List<Integer> initResourceIds() {
+		int randomNum = (int)(10*Math.random());
+		for(int i =0 ;i<randomNum;i++) {
+			resourceId.add((int)(100*Math.random()));
+		}
+		return resourceId;
+	}
+	
 	public void createRR() {
 		System.out.println("基础方法，生成resource request");
 	}

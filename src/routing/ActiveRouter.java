@@ -97,6 +97,10 @@ public abstract class ActiveRouter extends MessageRouter {
 		if (this.energy != null && con.isUp() && !con.isInitiator(getHost())) {
 			this.energy.reduceDiscoveryEnergy();
 		}
+		//判断不同接口之间是否可以通信
+//		if(con.isUp()&&this.getHost().toString().charAt(0)=='m') {
+//			System.out.println(this.getHost().toString()+"--"+con.getOtherNode(this.getHost()).toString());
+//		}
 	}
 
 	@Override
@@ -148,7 +152,7 @@ public abstract class ActiveRouter extends MessageRouter {
 		 */
 		// check if msg was for this host and a response was requested
 		if (m.getTo() == getHost() && m.getResponseSize() > 0) {
-			// generate a response message
+			// generate a response message 是在接收到请求后所产生的响应包数据
 			Message res = new Message(this.getHost(),m.getFrom(),
 					RESPONSE_PREFIX+m.getId(), m.getResponseSize());
 			this.createNewMessage(res);
@@ -363,7 +367,6 @@ public abstract class ActiveRouter extends MessageRouter {
 				}
 			}
 		}
-
 		return forTuples;
 	}
 

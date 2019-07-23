@@ -10,6 +10,7 @@ import core.Settings;
  * 
  * @author ht
  * P2P interface 主要为了在The One中实现Wi-Fi Direct连接
+ * 只负责p2p网卡的逻辑，与wlan网卡的逻辑分开来
  */
 public class P2PInterface extends NetworkInterface{
 	public P2PInterface(Settings s) {
@@ -26,7 +27,9 @@ public class P2PInterface extends NetworkInterface{
 	}
 
 	@Override
-	//组主和未连接状态的组员可以连接，单连接状态的网关可以使用空闲网卡接口和组主连接，未连接状态的网关优先使用P2P网卡与组主连接。反之亦可。
+	//组主和未连接状态的组员可以连接，未连接状态的网关优先使用P2P网卡与组主P2P网卡建立连接
+	//不需要对接口连接类型进行判断，因为THEONE中只有相同接口才能通信
+	//isConnecteds函数不能判断该节点与对应的接口是否已经存在连接，而是只判断当前节点的当前接口是否与对应接口是否存在连接
 	public void connect(NetworkInterface anotherInterface) {
 		if (isScanning()
 				&& anotherInterface.getHost().isRadioActive()
@@ -43,6 +46,11 @@ public class P2PInterface extends NetworkInterface{
 			Connection con = new CBRConnection(this.host, this,
 					anotherInterface.getHost(), anotherInterface, conSpeed);
 			connect(con,anotherInterface);
+			System.out.println(this.getHost().getNodeType()+this.getHost().getAddress()+this.getInterfaceType()+"使用p2p接口连接"+
+			anotherInterface.getHost().getNodeType()+anotherInterface.getHost().getAddress()+anotherInterface.getInterfaceType()+"成功！！");
+			//TODO 将节点的资源信息交付给所连接的GO节点
+			
+			anotherInterface.addRN().this.getHost().getResourceId()
 		}
 	}
 
@@ -66,6 +74,7 @@ public class P2PInterface extends NetworkInterface{
 				assert con.isUp() : "Connection " + con + " was down!";
 				if (!isWithinRange(anotherInterface)) {
 					disconnect(con,anotherInterface);
+					//TODO 更新RN表，更新GWT表
 					connections.remove(i);
 				}
 				else {
@@ -92,48 +101,71 @@ public class P2PInterface extends NetworkInterface{
 					connections.remove(0);
 				}
 			}
-		}
+		} 
 		// 建立新的连接
 		Collection<NetworkInterface> interfaces =
 			optimizer.getNearInterfaces(this);
-		if(!this.getHost().getIsGO()) {
-			if(!this.getHost().getIsGW()) {
-				if(this.connections.size()==0) {
-					for(NetworkInterface i: interfaces) {
-						if(i.getHost().getIsGO()) {
-							double probabilityConGO = Math.random();
-							if(probabilityConGO>0.5) {
-								connect(i);
-								break;
+			if(!this.getHost().getIsGO()) {
+				if(!this.getHost().getIsGW()) {
+					//组员与组主建立连接
+					if(this.connections.size()==0) {
+						for(NetworkInterface i: interfaces) {
+							if(i.getHost().getIsGO()) {
+								double probabilityConGO = Math.random();
+								if(probabilityConGO>0.5) {
+									connect(i);
+									break;
+								}
 							}
 						}
 					}
-				}
-			}else {
-				//网关节点连接
-				//connections.size()==1 意味着本GW的P2P接口已经连接到一个GO了，对于本接口来讲任务已经完成，不需要管Wlan接口是否
-				if(this.connections.size()==0) {
-					for(NetworkInterface i: interfaces) {
-						if(i.getHost().getIsGO()) {
-							double probabilityConGO = Math.random();
-							if(probabilityConGO>0.5) {
-								connect(i);
-								break;
+				}else {
+					//网关节点连接
+					//connections.size()==1 意味着本GW的P2P接口已经连接到一个GO了，
+					//同时要保证GW使用p2p网卡连接时，GW节点的WLan接口没有连接到相同的GO节点
+					boolean isConnected = false;      
+					if(this.connections.size()==0) {
+						for(NetworkInterface i: interfaces) {
+							if(i.getHost().getIsGO()) {
+								double probabilityConGO = Math.random();
+								if(probabilityConGO>0.5) {
+									for(NetworkInterface networkInterface:this.getHost().getInterfaces()) {
+										if(networkInterface.getConnections().size()>0) {
+											for(Connection connection: networkInterface.getConnections()) {
+												if(connection.getOtherInterface(networkInterface).equals(i)) { 
+													isConnected = true;
+													break;
+												}
+											}
+										}
+										if(isConnected) {
+											break;
+										}
+									}
+									if(!isConnected) {
+										connect(i);
+										break;
+									}else {
+										isConnected = false;
+									}
+								}
 							}
 						}
 					}
 				}
 			}
-		}else {
-			//组主节点 不能限制连接个数，为了保证整个系统连接关系的同步性
-			for (NetworkInterface i : interfaces) {
-				if(i.getHost().getIsGO()) {
-					continue;
-				}else 	if(i.getConnections().size()==0) {
-						connect(i);
-					}
-				}  
-			}
+			//为了与真机实验保持一致，GO节点不允许主动与组员节点建立连接
+//			else {
+//				//组主节点 不能限制连接个数，为了保证整个系统连接关系的同步性。
+//				//除了GO节点其他节点不论使用哪个网卡接口都只能存在一个连接，因此，对于GW节点不需要考虑i.getConnections().size()=1的情况
+//				for (NetworkInterface i : interfaces) {   
+//					if(i.getHost().getIsGO()) {
+//						continue;
+//					}else  if(i.getConnections().size()==0) {
+//							connect(i);
+//						}
+//					}
+//				}
 	}
 
 	@Override

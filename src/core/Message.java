@@ -23,6 +23,7 @@ public class Message implements Comparable<Message> {
 	/** Size of the message (bytes) */
 	private int size;
 	/** List of nodes this message has passed */
+	//这个path可以修改为只保存关键节点信息
 	private List<DTNHost> path;
 	/** Next unique identifier to be given */
 	private static int nextUniqueId;
@@ -135,6 +136,7 @@ public class Message implements Comparable<Message> {
 	 * Returns a list of nodes this message has passed so far
 	 * @return The list as vector
 	 */
+	
 	public List<DTNHost> getHops() {
 		return this.path;
 	}

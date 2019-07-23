@@ -139,8 +139,8 @@ public class MessageStatsReport extends Report implements MessageListener {
 	public void done() {
 		write("Message stats for scenario " + getScenarioName() +
 				"\nsim_time: " + format(getSimTime()));
-		double deliveryProb = 0; // delivery probability
-		double responseProb = 0; // request-response success probability
+		double deliveryProb = 0; // delivery probability 相当于资源发现的成功率
+		double responseProb = 0; // request-response success probability 资源请求-资源回溯的成功率
 		double overHead = Double.NaN;	// overhead ratio
 
 		if (this.nrofCreated > 0) {
@@ -172,7 +172,8 @@ public class MessageStatsReport extends Report implements MessageListener {
 			"\nbuffertime_avg: " + getAverage(this.msgBufferTime) +
 			"\nbuffertime_med: " + getMedian(this.msgBufferTime) +
 			"\nrtt_avg: " + getAverage(this.rtt) +
-			"\nrtt_med: " + getMedian(this.rtt)
+			"\nrtt_med: " + getMedian(this.rtt)+
+			"\nrofResponseReqCreated"+this.nrofResponseReqCreated
 			;
 
 		write(statsText);

@@ -133,9 +133,20 @@ public class MessageEventGenerator implements EventQueue {
 
 
 	/**
+	 * @author ht
+	 * @param numEvent 定义的事件集合个数
+	 * @return result  请求事件的标号，代表所请求的资源编号
+	 * 这个产生的请求资源编号用来代替目的节点标号
+	 */
+	protected int drawRequestInfo(int numEvent) {
+		int result = rng.nextInt(numEvent);
+		return result;
+	}
+	/**
 	 * Draws a random host address from the configured address range
 	 * @param hostRange The range of hosts
 	 * @return A random host address
+	 * 随机从范围内节点中获取一个节点作为源节点
 	 */
 	protected int drawHostAddress(int hostRange[]) {
 		if (hostRange[1] == hostRange[0]) {
@@ -147,6 +158,7 @@ public class MessageEventGenerator implements EventQueue {
 	/**
 	 * Generates a (random) message size
 	 * @return message size
+	 * 信息大小
 	 */
 	protected int drawMessageSize() {
 		int sizeDiff = sizeRange[0] == sizeRange[1] ? 0 :
@@ -157,6 +169,7 @@ public class MessageEventGenerator implements EventQueue {
 	/**
 	 * Generates a (random) time difference between two events
 	 * @return the time difference
+	 * 两次事件之间的间隔
 	 */
 	protected int drawNextEventTimeDiff() {
 		int timeDiff = msgInterval[0] == msgInterval[1] ? 0 :
@@ -170,6 +183,7 @@ public class MessageEventGenerator implements EventQueue {
 	 * @param hostRange The range of hosts
 	 * @param from the "from" address
 	 * @return a destination address from the range, but different from "from"
+	 * 随机生成目的节点
 	 */
 	protected int drawToAddress(int hostRange[], int from) {
 		int to;
@@ -195,13 +209,14 @@ public class MessageEventGenerator implements EventQueue {
 		/* Get two *different* nodes randomly from the host ranges */
 		from = drawHostAddress(this.hostRange);
 		to = drawToAddress(hostRange, from);
-
+		
 		msgSize = drawMessageSize();
 		interval = drawNextEventTimeDiff();
 
 		/* Create event and advance to next event */
 		MessageCreateEvent mce = new MessageCreateEvent(from, to, this.getID(),
 				msgSize, responseSize, this.nextEventsTime);
+		System.out.println("下一次事件："+mce.toString());
 		this.nextEventsTime += interval;
 
 		if (this.msgTime != null && this.nextEventsTime > this.msgTime[1]) {

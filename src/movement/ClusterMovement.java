@@ -20,8 +20,8 @@ public class ClusterMovement extends RandomWaypoint {
 	public static final String	CLUSTER_CENTER = "clusterCenter";
 
 	private int		p_x_center = 100, p_y_center = 100;
-	//假定一个组内节点的活动范围在半径为4.5米的圆内
-	private double	p_range = 2;
+	//假定一个组内节点的活动范围在半径为10米的圆内
+	private double	p_range = 10;
 
 	public ClusterMovement(Settings s) {
 		super(s);

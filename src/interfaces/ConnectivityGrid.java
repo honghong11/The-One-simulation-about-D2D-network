@@ -198,7 +198,7 @@ public class ConnectivityGrid extends ConnectivityOptimizer {
 	 * @return Array of neighboring Cells
 	 */
 	private GridCell[] getNeighborCells(int row, int col) {
-		return new GridCell[] {
+		return new GridCell[] { 
 			cells[row-1][col-1],cells[row-1][col],cells[row-1][col+1],//1st row
 			cells[row][col-1],cells[row][col],cells[row][col+1],//2nd row
 			cells[row+1][col-1],cells[row+1][col],cells[row+1][col+1]//3rd row
@@ -238,15 +238,16 @@ public class ConnectivityGrid extends ConnectivityOptimizer {
 			NetworkInterface ni) {
 		ArrayList<NetworkInterface> niList = new ArrayList<NetworkInterface>();
 		GridCell loc = (GridCell)ginterfaces.get(ni);
-
+//		System.out.println(loc); 
+//		System.out.println("----------------------------------------------------");
 		if (loc != null) {
 			GridCell[] neighbors =
 				getNeighborCellsByCoord(ni.getLocation());
+//			System.out.println("hh"+neighbors);
 			for (int i=0; i < neighbors.length; i++) {
 				niList.addAll(neighbors[i].getInterfaces());
 			}
 		}
-
 		return niList;
 	}
 

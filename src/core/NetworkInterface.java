@@ -511,7 +511,7 @@ abstract public class NetworkInterface implements ModuleCommunicationListener {
 	 */
 	public String toString() {
 		return this.address + " of " + this.host +
-			". Connections: " +	this.connections;
+			". Connections: " +this.interfacetype;
 	}
 
 }

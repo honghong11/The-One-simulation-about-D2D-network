@@ -149,7 +149,8 @@ public class World {
 	 */
 	public void update () {
 		double runUntil = SimClock.getTime() + this.updateInterval;
-
+		
+		//这里的setNextEventQueue相当于一次初始化，下面的while循环是word更新的主体
 		setNextEventQueue();
 
 		/* process all events that are due until next interval update */
